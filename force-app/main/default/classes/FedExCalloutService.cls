@@ -3,7 +3,7 @@ public with sharing class FedExCalloutService {
         
     }
 
-    public static void trackPackages() {
+    public static void trackPackages(List<Package__c> packageList) {
         try {
             FedexSfdcIntegratorV16.TrackServicePort service = new FedexSfdcIntegratorV16.TrackServicePort();
             FedexSfdcIntegratorV16.TrackReply response = service.track(createWebAuthDetails(), 
@@ -13,7 +13,9 @@ public with sharing class FedExCalloutService {
                                                                   createTrackSelectionDetails(), 
                                                                   12000, 
                                                                   new List<String>());
-
+            
+            
+			Map<String, String> statusMap = updateStatus(response);
            
         } catch(Exception e) {
             system.debug(e);
@@ -21,7 +23,7 @@ public with sharing class FedExCalloutService {
         
     }
 
-    private static void updateStatus(FedexSfdcIntegratorV16.TrackReply trackReply) {
+    private static Map<String, String> updateStatus(FedexSfdcIntegratorV16.TrackReply trackReply) {
         List<FedexSfdcIntegratorV16.CompletedTrackDetail> completedTrackDetailList = trackReply.CompletedTrackDetails;
         List<FedexSfdcIntegratorV16.TrackDetail> trackDetailList = new List<FedexSfdcIntegratorV16.TrackDetail>();
         for(FedexSfdcIntegratorV16.CompletedTrackDetail completedTrackDetail : completedTrackDetailList) {
@@ -35,6 +37,7 @@ public with sharing class FedExCalloutService {
                 statusMap.put(trackDetail.TrackingNumber, trackStatusDetail.Description);
             }
         }
+        return statusMap;
     }
 
     private static FedexSfdcIntegratorV16.WebAuthenticationDetail createWebAuthDetails() {
@@ -42,9 +45,7 @@ public with sharing class FedExCalloutService {
         userCreds.Password = 'Vq3NvMS9rnbQiX9f9dy0EHNVP';
         userCreds.Key = 'j0xrzzuhynb7kSCa';
         FedexSfdcIntegratorV16.WebAuthenticationDetail webAuthDetails = new FedexSfdcIntegratorV16.WebAuthenticationDetail();
-       // webAuthDetails.ParentCredential = userCreds;
         webAuthDetails.UserCredential = userCreds;
-
         return webAuthDetails;
     }
 
